@@ -284,7 +284,7 @@ async function fetchCandles(pair, outputsize = 200) {
 async function fetchCandles30(pair) {
   try {
     const r = await fetch(
-      `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(pair)}&interval=30min&outputsize=300&apikey=${TWELVE_KEY}`
+      `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(pair)}&interval=15min&outputsize=300&apikey=${TWELVE_KEY}`
     );
     const d = await r.json();
     if (!d.values || d.status === 'error') return null;
@@ -311,14 +311,14 @@ async function checkTrades() {
  
       const candles = await fetchCandles30(trade.pair);
       await sleep(600);
-      if (!candles || !candles.length) { console.log(`⚠️  ${trade.pair} — bougies 30min indisponibles`); continue; }
+      if (!candles || !candles.length) { console.log(`⚠️  ${trade.pair} — bougies 15min indisponibles`); continue; }
  
       // Filtre strict : uniquement bougies dont le DÉBUT est APRÈS l'entrée
       const postEntry = candles.filter(c => new Date(c.datetime).getTime() > entryTs);
  
       if (!postEntry.length) {
         const last = candles[candles.length - 1];
-        console.log(`⏸  ${trade.pair} — en attente bougie 30min post-entrée | TP: ${(Math.abs(last.close-tp)/pipDiv).toFixed(0)}p | SL: ${(Math.abs(last.close-sl)/pipDiv).toFixed(0)}p`);
+        console.log(`⏸  ${trade.pair} — en attente bougie 15min post-entrée | TP: ${(Math.abs(last.close-tp)/pipDiv).toFixed(0)}p | SL: ${(Math.abs(last.close-sl)/pipDiv).toFixed(0)}p`);
         continue;
       }
  
@@ -338,14 +338,14 @@ async function checkTrades() {
  
       if (closed) {
         const pips = ((trade.direction==='BUY'?closePrice-en:en-closePrice)/pipDiv).toFixed(1);
-        console.log(`${result==='WIN'?'✅':'❌'} ${trade.pair} ${trade.direction} — ${pips>0?'+':''}${pips}p | 30min: ${closeDate}`);
+        console.log(`${result==='WIN'?'✅':'❌'} ${trade.pair} ${trade.direction} — ${pips>0?'+':''}${pips}p | 15min: ${closeDate}`);
         history.unshift({ ...trade, result, closePrice: closePrice.toFixed(dec), pips, closedAt: new Date(closeDate).toISOString() });
         if (history.length > 100) history = history.slice(0, 100);
         activeTrades = activeTrades.filter(t => t.pair !== trade.pair);
         changed = true;
       } else {
         const last = postEntry[postEntry.length - 1];
-        console.log(`⏸  ${trade.pair} ${trade.direction} | ${last.close} | TP ${(Math.abs(last.close-tp)/pipDiv).toFixed(0)}p | SL ${(Math.abs(last.close-sl)/pipDiv).toFixed(0)}p | ${postEntry.length} bougies 30min`);
+        console.log(`⏸  ${trade.pair} ${trade.direction} | ${last.close} | TP ${(Math.abs(last.close-tp)/pipDiv).toFixed(0)}p | SL ${(Math.abs(last.close-sl)/pipDiv).toFixed(0)}p | ${postEntry.length} bougies 15min`);
       }
  
     } catch (e) { console.error(`checkTrades ${trade.pair}:`, e.message); }
